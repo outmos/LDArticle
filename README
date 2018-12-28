@@ -1,9 +1,1 @@
 https://www.overleaf.com/1471236234khdfsxycpnvf
-
-
-gain = (self.r*self.c*self.state.count('C'))/n
-					for p in players:
-						if self.state[p.id] == "C":
-							average_payoffs[p.id] += (gain-self.c)/NB_GAME
-						else:
-							average_payoffs[p.id] += (gain)/NB_GAME
