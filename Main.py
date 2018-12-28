@@ -11,4 +11,4 @@ if __name__ == '__main__':
     mu = 10**-4
 
     game = PublicGoodsGame(M, p, runs, r, c, mu)
-    game.two_person_game()
+    game.run_two_person_game()

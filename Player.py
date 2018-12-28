@@ -1,33 +1,37 @@
 
 class Player:
 
-    def __init__(self, id, strat):
+	def __init__(self, strat):
 
-        self.id = id
-        self.strat = strat
+		self.strat = strat
+		self.id = 0
 
-    def __str__(self):
+	def __str__(self):
 
-        return "Player {} k : {}".format(self.id+1, self.strat)
+		return "Player {} k : {}".format(self.strat)
 
-    def get_strat(self):
+	def get_strat(self):
 
-        return self.strat
+		return self.strat
 
-    def change_thought(self, state):
+	def set_id(self, ID):
 
-       if (state[0:self.id]+state[self.id:-1]).count("C") < self.strat:
+		self.id = ID
 
-           if state[self.id] == 'D':
-                return False
-           else:
-               return True
-       else:
-           if state[self.id] == 'C':
-               return False
-           else:
-               return True
+	def change_thought(self, state):
+		
+		if (state[0:self.id] + state[self.id%2:-1]).count("C") < self.strat:
 
-    def update_thought(self, state):
+			if state[self.id] == 'D':
+				return False
+			else:
+				return True
+		else:
+			if state[self.id] == 'C':
+				return False
+			else:
+				return True
 
-        state[self.id] = "C" if state[self.id]=="D" else "D"
+	def update_thought(self, state):
+
+		state[self.id] = "C" if state[self.id] == "D" else "D"
