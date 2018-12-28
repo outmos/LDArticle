@@ -18,16 +18,20 @@ class Player:
 
 		self.id = ID
 
-	def change_thought(self, state):
-		
-		if (state[0:self.id] + state[self.id%2:-1]).count("C") < self.strat:
+	def change_thought(self, state_class, players, n):
+		state = []
+		for p in players:
+			if p.id != self.id:
+				state.append(state_class[p.id])
 
-			if state[self.id] == 'D':
+		if state.count("C") < self.strat:
+
+			if state_class[self.id] == 'D':
 				return False
 			else:
 				return True
 		else:
-			if state[self.id] == 'C':
+			if state_class[self.id] == 'C':
 				return False
 			else:
 				return True
