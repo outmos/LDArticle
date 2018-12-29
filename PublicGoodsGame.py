@@ -3,138 +3,106 @@ import numpy as np
 from Player import Player
 import matplotlib.pyplot as plt
 
-NB_GAME = 10  # number of games each player will be playing
+NB_GAME = 10  #nb de game pour un joueur
 
 class PublicGoodsGame:
 
-	def __init__(self, n, m, p, runs, generations, r, c, mu, s):
-
+	def __init__(self, n, m, p, runs, r, c, mu,s):
 		self.n = n
 		self.m = m
 		self.p = p
 		self.runs = runs
-		self.generations = generations
 		self.r = r
 		self.c = c
 		self.mu = mu
 		self.s = s
 
-		self.players = [Player(random.randint(0, n), i) for i in range(self.m)]
-		self.average_payoffs = [0 for i in range(self.m)]
+		self.players = [Player(random.randint(0,n)) for i in range(self.m)]
+		for i in range(m):
+			self.players[i].set_id(i)
+
 		self.state = []
 
+
+
 	def run_two_person_game(self):
+		n = self.n
 
-		yy = [[] for i in range(self.n+1)]
+		xx = np.arange(0,self.runs,1)
 
-		time_average_frequency = [0 for i in range(self.n+1)]
-		for i in range(self.runs):
-			print("Run {}".format(i))
-			for j in range(self.generations):
+		yy = [[] for i in range(n+1)]
+		
+		for i in range(0,self.runs):
 
-				self.average_payoffs = [0 for i in range(self.m)]
+			average_payoffs = [0 for i in range(self.m)]
+			if i %100 == 0:
+				print("runs ",i)
 
-				for game_number in range(NB_GAME):
+			for game_number in range(NB_GAME):
+				#create pair
+				random.shuffle(self.players)
 
-					# create pairs
-					random.shuffle(self.players)
+				self.state = [np.random.choice(['C', 'D'], p=[self.p, 1-self.p]) for i in range(self.m)]
 
-					self.state = [np.random.choice(['C', 'D'], p=[self.p, 1-self.p]) for i in range(self.m)]
+				for group in range(self.m//n):
+					players = self.players[group*n:(group+1)*n]
 
-					for group in range(self.m//self.n):
+					# negociations-----------------------------------------------------
 
-						players = self.players[group*self.n:(group+1)*self.n]
+					while not self.is_stationary_state(players):
+						j = random.randint(0,n-1)
+						if players[j].change_thought(self.state, players,n):
+							players[j].update_thought(self.state)
 
-						# negotiations stage ------------------------------------------------
-						self.negotiations(players)
+					# compute payoffs--------------------------------------------------
+					nb_cooperators = 0
+					for p in players:
+						if self.state[p.id] == 'C':
+							nb_cooperators += 1
 
-						# play the game --------------------------------------------------
-						self.play_game(players)
+					gain = (self.r*self.c*nb_cooperators)/n
+					for p in players:
+						if self.state[p.id] == "C":
+							average_payoffs[p.id] += (gain-self.c)/NB_GAME
+						else:
+							average_payoffs[p.id] += (gain)/NB_GAME
 
-					# update process  ------------------------------------------------
-					self.update_process()
+				# update strategies------------------------------------------------
 
-			"""	count = [0 for i in range(self.n+1)]
-				for player in self.players:
-					count[player.strat] += 1
-				for j in range(self.n+1):
-					yy[j].append(count[j])
+				p1 = random.randint(0,self.m-1)
+				p2 = random.randint(0,self.m-2)
+				if p2 >= p1:
+					p2 += 1
 
-			xx = np.arange(0,self.generations,1)
+				if random.random() < self.mu:
+					new_strat = random.randint(0,n-1)
+					if new_strat >= self.players[p1].strat:
+						new_strat += 1
+					self.players[p1].strat = new_strat
+				
+				else:
+					delta = average_payoffs[self.players[p2].id] - average_payoffs[self.players[p1].id]
+					if random.random() < 1/(1+np.exp(-self.s*delta)):
+						self.players[p1].strat = self.players[p2].strat
 
-			plt.title("Strategies frequencies over generations")
-			plt.xlabel("generations")
-			plt.ylabel("Strategy frequency")
+			count = [0 for j in range(n+1)]
+			for p in self.players:
+				count[p.strat] += 1
+			for j in range(n+1):
+				yy[j].append(count[j])
 
-			for i in range(self.n+1):
-				plt.plot(xx, yy[i], label=r"$C_{}$".format(i))
-
-			plt.legend()
-			plt.show()"""
-
-			# check if all players have the same strategy
-			strats = [player.strat for player in self.players]
-			if len(set(strats)) == 1:
-				time_average_frequency[strats[0]] += 1
-
-		# time_average_frequency = [(time/self.generations) for time in time_average_frequency]
-
-		x = [i+1 for i in range(self.n+1)]
-		labels = [r"$C_{}$".format(i) for i in range(self.n+1)]
-
-		plt.title("Time-averaged-frequencies")
-		plt.xlabel("Strategies")
-		plt.ylabel("Frequency")
-		plt.bar(x, time_average_frequency, color="royalblue")
-		plt.xticks(x, labels)
+		for i in range(n+1):
+			plt.plot(xx,yy[i],label="C"+str(i))
+		plt.legend()
 		plt.show()
 
-	def negotiations(self, players):
 
-		while not self.is_stationary_state(players):
+	def get_random_players(self, players):
+		return random.sample(players, self.n)
 
-			player = random.choice(players)
 
-			if player.change_thought(self.state, players):
-				player.update_thought(self.state)
-
-	def play_game(self, players):
-
-		k = 0				# number of cooperators
-		for player in players:
-			if self.state[player.id] == 'C':
-				k += 1
-
-		gain = (self.r*self.c*k)/self.n
-		for player in players:
-			if self.state[player.id] == "C":
-				self.average_payoffs[player.id] += (gain-self.c)/NB_GAME
-			else:
-				self.average_payoffs[player.id] += (gain)/NB_GAME
-
-	def update_process(self):
-
-		player_1, player_2 = self.get_random_players()
-
-		if random.random() < self.mu:
-
-			new_strat = random.choice([i for i in range(self.n+1) if i != player_1.strat])
-			player_1.strat = new_strat
-		
-		else:
-			delta =self. average_payoffs[player_2.id] - self.average_payoffs[player_1.id]
-
-			if random.random() < 1/(1+np.exp(-self.s*delta)):
-				player_1.strat = player_2.strat
-
-	def get_random_players(self):
-
-		return random.sample(self.players, 2)
-
-	def is_stationary_state(self, players):
-
-		for player in players:
-
-			if player.change_thought(self.state, players):
+	def is_stationary_state(self,players):
+		for i in range(self.n):
+			if players[i].change_thought(self.state,players,self.n):
 				return False
 		return True
