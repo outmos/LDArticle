@@ -1,28 +1,18 @@
 
 class Player:
 
-	def __init__(self, strat):
+	def __init__(self, strat, ID):
 
 		self.strat = strat
-		self.id = 0
-
-	def __str__(self):
-
-		return "Player {} k : {}".format(self.strat)
-
-	def get_strat(self):
-
-		return self.strat
-
-	def set_id(self, ID):
-
 		self.id = ID
 
-	def change_thought(self, state_class, players, n):
+	def change_thought(self, state_class, players):
+
 		state = []
-		for p in players:
-			if p.id != self.id:
-				state.append(state_class[p.id])
+		for player in players:
+			
+			if player.id != self.id:
+				state.append(state_class[player.id])
 
 		if state.count("C") < self.strat:
 
