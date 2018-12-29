@@ -7,12 +7,13 @@ NB_GAME = 10  # number of games each player will be playing
 
 class PublicGoodsGame:
 
-	def __init__(self, n, m, p, runs, r, c, mu, s):
+	def __init__(self, n, m, p, runs, generations, r, c, mu, s):
 
 		self.n = n
 		self.m = m
 		self.p = p
 		self.runs = runs
+		self.generations = generations
 		self.r = r
 		self.c = c
 		self.mu = mu
@@ -27,66 +28,64 @@ class PublicGoodsGame:
 		yy = [[] for i in range(self.n+1)]
 
 		time_average_frequency = [0 for i in range(self.n+1)]
-		
-		for i in range(0, self.runs):
+		for i in range(self.runs):
+			print("Run {}".format(i))
+			for j in range(self.generations):
 
-			self.average_payoffs = [0 for i in range(self.m)]
+				self.average_payoffs = [0 for i in range(self.m)]
 
-			if i %100 == 0:
+				for game_number in range(NB_GAME):
 
-				print("runs ",i)
+					# create pairs
+					random.shuffle(self.players)
 
-			for game_number in range(NB_GAME):
+					self.state = [np.random.choice(['C', 'D'], p=[self.p, 1-self.p]) for i in range(self.m)]
 
-				# create pairs
-				random.shuffle(self.players)
+					for group in range(self.m//self.n):
 
-				self.state = [np.random.choice(['C', 'D'], p=[self.p, 1-self.p]) for i in range(self.m)]
+						players = self.players[group*self.n:(group+1)*self.n]
 
-				for group in range(self.m//self.n):
+						# negotiations stage ------------------------------------------------
+						self.negotiations(players)
 
-					players = self.players[group*self.n:(group+1)*self.n]
+						# play the game --------------------------------------------------
+						self.play_game(players)
 
-					# negotiations stage ------------------------------------------------
-					self.negotiations(players)
+					# update process  ------------------------------------------------
+					self.update_process()
 
-					# play the game --------------------------------------------------
-					self.play_game(players)
+			"""	count = [0 for i in range(self.n+1)]
+				for player in self.players:
+					count[player.strat] += 1
+				for j in range(self.n+1):
+					yy[j].append(count[j])
 
-				# update process  ------------------------------------------------
-				self.update_process()
+			xx = np.arange(0,self.generations,1)
 
-				# check if all players have the same strategy
-				strats = [player.strat for player in self.players]
-				if len(set(strats)) == 1:
-					time_average_frequency[strats[0]] += 1
-				
-			count = [0 for i in range(self.n+1)]
-			for player in self.players:
-				count[player.strat] += 1
-			for j in range(self.n+1):
-				yy[j].append(count[j])
+			plt.title("Strategies frequencies over generations")
+			plt.xlabel("generations")
+			plt.ylabel("Strategy frequency")
 
-		xx = np.arange(0,self.runs,1)
+			for i in range(self.n+1):
+				plt.plot(xx, yy[i], label=r"$C_{}$".format(i))
 
-		plt.title("Strategies frequencies over generations")
-		plt.xlabel("generations")
-		plt.ylabel("Strategy frequency")
+			plt.legend()
+			plt.show()"""
 
-		for i in range(self.n+1):
-			plt.plot(xx, yy[i], label=r"$C_{}$".format(i))
+			# check if all players have the same strategy
+			strats = [player.strat for player in self.players]
+			if len(set(strats)) == 1:
+				time_average_frequency[strats[0]] += 1
 
-		plt.legend()
-		plt.show()
+		# time_average_frequency = [(time/self.generations) for time in time_average_frequency]
 
 		x = [i+1 for i in range(self.n+1)]
 		labels = [r"$C_{}$".format(i) for i in range(self.n+1)]
-		time_average_frequency = [(time/self.runs)*100 for time in time_average_frequency]
 
 		plt.title("Time-averaged-frequencies")
 		plt.xlabel("Strategies")
 		plt.ylabel("Frequency")
-		plt.bar(x, time_average_frequency, color="green")
+		plt.bar(x, time_average_frequency, color="royalblue")
 		plt.xticks(x, labels)
 		plt.show()
 
