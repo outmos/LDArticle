@@ -3,12 +3,12 @@ from random import random, randint
 import matplotlib.pyplot as plt
 import numpy as np
 
-NB_NODE = 20
+NB_NODE = 1000
 
-P = 0.2
+P = 0.75
 R = 1.5
 C = 1.0
-MU = 10**-2
+MU = 10**-4
 
 G = nx.barabasi_albert_graph(NB_NODE,4)
 
@@ -29,20 +29,25 @@ def change_thought(t_p1,s_p1,t_p2):
 def is_stationary_state(t_p1,s_p1,t_p2,s_p2):
 	return (not (change_thought(t_p1,s_p1,t_p2) or change_thought(t_p2,s_p2,t_p1)) )
 
-NB_ROUNDS = 100
+NB_ROUNDS = 500
 COLOR = ['g','b','r']
 #s->inf
 #'C' = 1 and 'D'=0
 strategies = []
 
 
-xx = list(range(NB_ROUNDS))
+xx = list(range(NB_ROUNDS+1))
 yy = [[] for i in range(3)]
 
 for j in range(G.number_of_nodes()):
 	strategies.append(randint(0,2))
+print(strategies.count(0))
+print(strategies.count(1))
+print(strategies.count(2))
+input()
 
 for rounds in range(NB_ROUNDS):
+	print(rounds)
 	thought = [np.random.choice([1,0], p=[P, 1-P]) for i in range(NB_NODE)]
 	payoffs = [[-1 for i in range(NB_NODE)] for j in range(NB_NODE)]
 	av_payoffs = []
@@ -75,7 +80,7 @@ for rounds in range(NB_ROUNDS):
 	#Calcule average payoff
 	for p1 in range(NB_NODE):
 		av_payoffs.append((sum(payoffs[p1])+NB_NODE-G.degree[p1])/G.degree[p1])
-
+	"""
 	n_color = []
 	lbl = {}
 	for i in range(NB_NODE):
@@ -84,28 +89,30 @@ for rounds in range(NB_ROUNDS):
 
 	nx.draw(G, labels=lbl, node_size = 800, node_color=n_color)
 	plt.show()
-
+	"""
+	for i in range(3):
+		yy[i].append(strategies.count(i))
 
 	#On les fait changer de strat
+	old_strat = strategies
 	for p1 in range(NB_NODE):
 		p2 = list(G.neighbors(p1))[randint(0,G.degree[p1]-1)]
 		if av_payoffs[p1] < av_payoffs[p2]:
-			strategies[p1] = strategies[p2]
-
+			strategies[p1] = old_strat[p2]
+	
+	"""
 	if random()<MU:
 		p1 = randint(0,NB_NODE-1)
 		new_strat = random.randint(0,1)
 		if new_strat >= strategies[p1]:
 			new_strat += 1
 		strategies[p1] = new_strat
-
-	for i in range(3):
-		yy[i].append(strategies.count(i))
-
-"""
-
+	"""
+	
+for i in range(3):
+	yy[i].append(strategies.count(i))
 
 for i in range(3):
 	plt.plot(xx,yy[i],COLOR[i],label="C"+str(i))
 plt.legend()
-plt.show()"""
+plt.show()
